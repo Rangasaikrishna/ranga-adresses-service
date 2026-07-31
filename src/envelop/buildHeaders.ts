@@ -12,25 +12,33 @@ export const buildHeaders = (): Plugin<ContextType> => {
       extendContext({ requestId, client });
     },
     onExecute({ args, setResultAndStopExecution }) {
-      const { client } = args.contextValue;
+      const { client, requestId } = args.contextValue;
+      const withMetadata = <T extends Record<string, unknown>>(result: T) => ({
+        ...result,
+        metadata: { requestId },
+      });
 
       if (!client) {
-        setResultAndStopExecution({
-          errors: [new GraphQLError('Missing required header: client')],
-        });
+        setResultAndStopExecution(
+          withMetadata({
+            errors: [new GraphQLError('Missing required header: client')],
+          })
+        );
         return;
       }
 
       if (client === 'strata') {
         const operationAST = getOperationAST(args.document, args.operationName);
         if (operationAST?.operation === 'mutation') {
-          setResultAndStopExecution({
-            errors: [
-              new GraphQLError(
-                'Client strata is not allowed to perform mutations'
-              ),
-            ],
-          });
+          setResultAndStopExecution(
+            withMetadata({
+              errors: [
+                new GraphQLError(
+                  'Client strata is not allowed to perform mutations'
+                ),
+              ],
+            })
+          );
         }
       }
     },

@@ -8,9 +8,10 @@ const schema = genSchema();
 
 const yoga = createYoga({ schema, plugins });
 
-export const executor = buildHTTPExecutor({
-  fetch: yoga.fetch,
-  headers: {
-    client: 'test',
-  },
-});
+export const createExecutor = (headers: Record<string, string> = { client: 'test' }) =>
+  buildHTTPExecutor({
+    fetch: yoga.fetch,
+    headers,
+  });
+
+export const executor = createExecutor();
