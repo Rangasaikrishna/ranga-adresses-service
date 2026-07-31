@@ -5,10 +5,14 @@ import { ContextType } from '../types';
 
 export const buildHeaders = (): Plugin<ContextType> => {
   return {
-    onExecute({ args, extendContext, setResultAndStopExecution }) {
+    onEnveloped({ context, extendContext }) {
       const requestId = uuid();
-      const request = (args.contextValue as { request?: Request }).request;
-      const client = request?.headers.get('client') ?? undefined;
+      const request = (context as { request?: Request }).request;
+      const client = request?.headers.get('client') ?? '';
+      extendContext({ requestId, client });
+    },
+    onExecute({ args, setResultAndStopExecution }) {
+      const { client } = args.contextValue;
 
       if (!client) {
         setResultAndStopExecution({
@@ -27,11 +31,8 @@ export const buildHeaders = (): Plugin<ContextType> => {
               ),
             ],
           });
-          return;
         }
       }
-
-      extendContext({ requestId, client });
     },
   };
 };
